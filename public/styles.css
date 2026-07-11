@@ -36,3 +36,71 @@ body { min-height: 100dvh; }
 ::selection { background: var(--amber-dim); }
 button { font-family: inherit; cursor: pointer; }
 a { color: var(--amber-text); }
+
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: rgba(20, 22, 26, 0.92);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--border);
+}
+
+.header .prompt-glyph {
+  font-family: var(--font-mono);
+  color: var(--amber);
+  font-weight: 700;
+  font-size: 15px;
+}
+
+.header .title {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  font-size: 14px;
+  letter-spacing: -0.01em;
+}
+
+.header .label {
+  color: var(--text-dim);
+  font-size: 13px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+  min-width: 0;
+}
+
+.header .stats {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-dim);
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.header .stats .add { color: var(--add-text); }
+.header .stats .del { color: var(--del-text); }
+
+.container {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 16px 16px 120px;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 80px 20px;
+  color: var(--text-dim);
+}
+
+.empty-state .glyph {
+  font-family: var(--font-mono);
+  font-size: 28px;
+  color: var(--amber);
+  margin-bottom: 12px;
+}
