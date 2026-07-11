@@ -1,9 +1,12 @@
+// remote-review frontend — no build step, plain DOM.
+
 const params = new URLSearchParams(location.search);
 const TOKEN = params.get('t') || '';
 
 const state = {
   label: '',
   files: [],
+  // comments keyed by `${filePath}::${line}` -> { filePath, line, side, body, editing }
   comments: new Map(),
   submitted: false,
 };
@@ -137,11 +140,13 @@ function renderHunkTable(filePath, hunk) {
       el('td', { class: 'marker' }, marker),
       el('td', { class: 'content' }, line.content || ' '),
       el('td', { class: 'gutter-action' }, [
-        el('button', {
-          class: 'add-comment-btn',
-          title: 'Add comment',
-          onclick: () => startComment(filePath, displayLine, side, table, tr),
-        }, '+'),
+        line.type !== 'ctx' || true
+          ? el('button', {
+              class: 'add-comment-btn',
+              title: 'Add comment',
+              onclick: () => startComment(filePath, displayLine, side, table, tr),
+            }, '+')
+          : null,
       ]),
     ]);
     tbody.appendChild(tr);
@@ -158,7 +163,7 @@ function renderHunkTable(filePath, hunk) {
 
 function startComment(filePath, line, side, table, afterRow) {
   const key = commentKey(filePath, line, side);
-  if (state.comments.has(key)) return;
+  if (state.comments.has(key)) return; // already has one
   state.comments.set(key, { filePath, line, side, body: '', editing: true });
   render();
 }
