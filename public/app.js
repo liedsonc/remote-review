@@ -91,3 +91,32 @@ function render() {
   app.appendChild(container);
   app.appendChild(renderSubmitBar());
 }
+
+function renderFileBlock(file) {
+  const block = el('div', { class: 'file-block open' });
+  const nComments = countFileComments(file.path);
+
+  const header = el('div', { class: 'file-header', onclick: () => {
+    block.classList.toggle('open');
+  } }, [
+    el('span', { class: 'chev' }, '▸'),
+    el('span', { class: 'path' }, file.status === 'renamed' ? `${file.oldPath} → ${file.path}` : file.path),
+    nComments > 0 ? el('span', { class: 'comment-count' }, `${nComments} 💬`) : null,
+    el('span', { class: `status-tag ${file.status}` }, file.status),
+  ]);
+  block.appendChild(header);
+
+  const body = el('div', { class: 'file-body' });
+
+  if (file.isBinary) {
+    body.appendChild(el('div', { class: 'binary-note' }, 'Binary file not shown.'));
+  } else {
+    for (const hunk of file.hunks) {
+      body.appendChild(el('div', { class: 'hunk-header' }, hunk.header));
+      body.appendChild(renderHunkTable(file.path, hunk));
+    }
+  }
+
+  block.appendChild(body);
+  return block;
+}
