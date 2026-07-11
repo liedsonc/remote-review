@@ -16,5 +16,10 @@ export function createServer({ diffData, token, onSubmit }) {
     next();
   }
 
+
+  app.get('/api/diff', checkToken, (req, res) => {
+    res.json(diffData);
+  });
+
   return { app };
 }
