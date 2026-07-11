@@ -26,3 +26,23 @@ program
 
 const opts = program.opts();
 const [target, compareWith] = program.args;
+
+async function main() {
+  let diffData;
+  try {
+    diffData = await resolveDiff({
+      cwd: opts.cwd,
+      target,
+      compareWith,
+      contextLines: opts.context,
+    });
+  } catch (err) {
+    console.error(`[remote-review] Failed to resolve diff: ${err.message}`);
+    process.exitCode = 1;
+    return;
+  }
+
+  if (diffData.files.length === 0) {
+    console.log('[remote-review] No changes found for the requested target — nothing to review.');
+    return;
+  }
