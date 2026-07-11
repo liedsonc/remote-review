@@ -162,3 +162,54 @@ function startComment(filePath, line, side, table, afterRow) {
   state.comments.set(key, { filePath, line, side, body: '', editing: true });
   render();
 }
+
+function renderCommentRow(filePath, line, side) {
+  const key = commentKey(filePath, line, side);
+  const comment = state.comments.get(key);
+
+  const tr = el('tr', { class: 'comment-row' });
+  const td = el('td', { colspan: '5' });
+
+  if (comment.editing) {
+    const textarea = el('textarea', {
+      placeholder: 'Leave a note for Claude…',
+      autofocus: 'true',
+    });
+    textarea.value = comment.body;
+
+    const note = el('div', { class: 'comment-note' }, [
+      el('div', { class: 'tag' }, `${filePath}:L${line}`),
+      textarea,
+      el('div', { class: 'note-actions' }, [
+        el('button', { class: 'btn-ghost', onclick: () => {
+          state.comments.delete(key);
+          render();
+        } }, 'Cancel'),
+        el('button', { class: 'btn-amber', onclick: () => {
+          const val = textarea.value.trim();
+          if (!val) {
+            state.comments.delete(key);
+          } else {
+            comment.body = val;
+            comment.editing = false;
+          }
+          render();
+        } }, 'Save'),
+      ]),
+    ]);
+    td.appendChild(note);
+  } else {
+    const note = el('div', { class: 'comment-note' }, [
+      el('div', { class: 'tag' }, `${filePath}:L${line}`),
+      el('div', { class: 'saved-body' }, comment.body),
+      el('div', { class: 'saved-actions' }, [
+        el('button', { onclick: () => { comment.editing = true; render(); } }, 'Edit'),
+        el('button', { onclick: () => { state.comments.delete(key); render(); } }, 'Remove'),
+      ]),
+    ]);
+    td.appendChild(note);
+  }
+
+  tr.appendChild(td);
+  return tr;
+}
