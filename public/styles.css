@@ -252,3 +252,104 @@ table.diff-table {
   color: var(--amber);
   background: var(--amber-dim);
 }
+
+.comment-row td { padding: 0; background: var(--bg); }
+
+.comment-note {
+  margin: 6px 10px 10px 44px;
+  background: var(--bg-raised);
+  border: 1px solid var(--amber);
+  border-left: 3px solid var(--amber);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  padding: 10px 12px;
+  font-family: var(--font-ui);
+}
+
+.comment-note .tag {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--amber-text);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.comment-note .tag::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--amber);
+  display: inline-block;
+}
+
+.comment-note textarea {
+  width: 100%;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text);
+  font-family: var(--font-ui);
+  font-size: 13px;
+  padding: 8px;
+  resize: vertical;
+  min-height: 56px;
+}
+
+.comment-note textarea:focus {
+  outline: none;
+  border-color: var(--amber);
+}
+
+.comment-note .note-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.btn-ghost {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  padding: 5px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+}
+.btn-ghost:hover { border-color: var(--text-faint); color: var(--text); }
+
+.btn-amber {
+  background: var(--amber);
+  border: 1px solid var(--amber);
+  color: #1a1305;
+  font-weight: 600;
+  padding: 5px 12px;
+  border-radius: 4px;
+  font-size: 12px;
+}
+.btn-amber:hover { background: var(--amber-text); }
+
+.comment-note .saved-body {
+  font-size: 13px;
+  color: var(--text);
+  white-space: pre-wrap;
+  line-height: 1.5;
+}
+
+.comment-note .saved-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 8px;
+}
+.comment-note .saved-actions button {
+  background: none;
+  border: none;
+  color: var(--text-faint);
+  font-size: 11px;
+  padding: 0;
+  text-decoration: underline;
+}
+.comment-note .saved-actions button:hover { color: var(--amber-text); }
