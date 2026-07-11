@@ -21,5 +21,16 @@ export function createServer({ diffData, token, onSubmit }) {
     res.json(diffData);
   });
 
+  let submitted = false;
+  app.post('/api/submit', checkToken, (req, res) => {
+    if (submitted) {
+      return res.status(409).json({ error: 'Review already submitted.' });
+    }
+    submitted = true;
+    const comments = Array.isArray(req.body?.comments) ? req.body.comments : [];
+    res.json({ ok: true });
+    onSubmit(comments);
+  });
+
   return { app };
 }
