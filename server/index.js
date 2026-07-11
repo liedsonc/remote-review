@@ -32,5 +32,11 @@ export function createServer({ diffData, token, onSubmit }) {
     onSubmit(comments);
   });
 
+  app.use(express.static(PUBLIC_DIR));
+
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(PUBLIC_DIR, 'index.html'));
+  });
+
   return { app };
 }
