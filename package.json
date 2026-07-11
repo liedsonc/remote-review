@@ -19,5 +19,12 @@
   },
   "scripts": {
     "start": "node bin/remote-review.js"
+  },
+  "dependencies": {
+    "commander": "^12.1.0",
+    "express": "^4.21.1",
+    "simple-git": "^3.27.0",
+    "open": "^10.1.0",
+    "get-port": "^7.1.0"
   }
 }
