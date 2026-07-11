@@ -26,5 +26,12 @@
     "simple-git": "^3.27.0",
     "open": "^10.1.0",
     "get-port": "^7.1.0"
-  }
+  },
+  "keywords": [
+    "claude-code",
+    "code-review",
+    "git-diff",
+    "cloudflared",
+    "tunnel"
+  ]
 }
