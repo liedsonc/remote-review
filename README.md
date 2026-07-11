@@ -99,3 +99,18 @@ The skill tells Claude Code to run `remote-review .` after finishing meaningful 
 - The tunnel is anonymous and unauthenticated beyond that token — treat the link as a bearer credential, don't paste it somewhere public.
 - The server only accepts **one** submission per invocation, then the process exits and the tunnel is torn down.
 - `remote-review` never writes to your repo or executes anything on your behalf; it only reads diffs and returns text.
+
+## Development
+
+```bash
+git clone <this-repo>
+cd remote-review
+npm install
+node bin/remote-review.js . --cwd /path/to/some/repo
+```
+
+No build step — plain Express backend, dependency-free vanilla-JS frontend.
+
+## License
+
+MIT
