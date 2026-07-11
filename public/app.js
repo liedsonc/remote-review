@@ -52,3 +52,42 @@ function totalComments() {
   for (const c of state.comments.values()) if (!c.editing) n++;
   return n;
 }
+
+function render() {
+  app.innerHTML = '';
+
+  if (state.submitted) {
+    app.appendChild(renderSubmittedScreen());
+    return;
+  }
+
+  const totalAdd = state.files.reduce((sum, f) => sum + f.hunks.reduce((s, h) => s + h.lines.filter(l => l.type === 'add').length, 0), 0);
+  const totalDel = state.files.reduce((sum, f) => sum + f.hunks.reduce((s, h) => s + h.lines.filter(l => l.type === 'del').length, 0), 0);
+
+  const header = el('div', { class: 'header' }, [
+    el('span', { class: 'prompt-glyph' }, '›_'),
+    el('span', { class: 'title' }, 'remote-review'),
+    el('span', { class: 'label' }, state.label),
+    el('span', { class: 'stats' }, [
+      el('span', { class: 'add' }, `+${totalAdd}`),
+      el('span', { class: 'del' }, `-${totalDel}`),
+    ]),
+  ]);
+  app.appendChild(header);
+
+  const container = el('div', { class: 'container' });
+
+  if (state.files.length === 0) {
+    container.appendChild(el('div', { class: 'empty-state' }, [
+      el('div', { class: 'glyph' }, '∅'),
+      el('div', {}, 'No changes to review.'),
+    ]));
+  } else {
+    for (const file of state.files) {
+      container.appendChild(renderFileBlock(file));
+    }
+  }
+
+  app.appendChild(container);
+  app.appendChild(renderSubmitBar());
+}
