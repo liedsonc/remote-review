@@ -16,5 +16,13 @@ export async function resolveDiff({ cwd, target, compareWith, contextLines }) {
   let raw;
   let label;
 
-  return { label, raw: raw || '', files: [] };
+  if (!target || target === 'HEAD') {
+    raw = await git.raw(['diff', ...contextArgs, 'HEAD~1', 'HEAD']).catch(async () => {
+      return git.raw(['diff', ...contextArgs, '4b825dc642cb6eb9a060e54bf8d69288fbee4904', 'HEAD']);
+    });
+    label = 'HEAD (latest commit)';
+  }
+
+  const files = parseUnifiedDiff(raw || '');
+  return { label, raw: raw || '', files };
 }
