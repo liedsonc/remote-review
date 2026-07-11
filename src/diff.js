@@ -30,6 +30,14 @@ export async function resolveDiff({ cwd, target, compareWith, contextLines }) {
   } else if (target === 'working') {
     raw = await git.raw(['diff', ...contextArgs]);
     label = 'Unstaged changes';
+  } else if (compareWith) {
+    raw = await git.raw(['diff', ...contextArgs, target, compareWith]);
+    label = `${target}..${compareWith}`;
+  } else {
+    raw = await git.raw(['diff', ...contextArgs, `${target}~1`, target]).catch(async () => {
+      return git.raw(['diff', ...contextArgs, '4b825dc642cb6eb9a060e54bf8d69288fbee4904', target]);
+    });
+    label = `${target}`;
   }
 
   const files = parseUnifiedDiff(raw || '');
