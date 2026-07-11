@@ -418,3 +418,14 @@ table.diff-table {
   max-width: 360px;
   margin: 0;
 }
+
+@media (max-width: 640px) {
+  .container { padding: 12px 8px 130px; }
+  .diff-line .ln { width: 32px; min-width: 32px; font-size: 11px; }
+  table.diff-table { font-size: 11.5px; }
+  .comment-note { margin-left: 8px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; }
+}
