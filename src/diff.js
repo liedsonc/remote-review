@@ -4,6 +4,17 @@ import { promisify } from 'node:util';
 
 const execFileAsync = promisify(execFile);
 
+/**
+ * Resolve a diff for the given target/compareWith arguments, similar to difit's model.
+ *
+ * Supported targets:
+ *   (none)          -> HEAD vs its parent (latest commit)
+ *   "."             -> all uncommitted changes (staged + unstaged)
+ *   "staged"        -> staged changes only
+ *   "working"       -> unstaged changes only
+ *   <commit-ish>    -> that commit vs its parent
+ *   <a> <b>         -> diff between two refs
+ */
 export async function resolveDiff({ cwd, target, compareWith, contextLines }) {
   const git = simpleGit({ baseDir: cwd });
 
@@ -18,6 +29,7 @@ export async function resolveDiff({ cwd, target, compareWith, contextLines }) {
 
   if (!target || target === 'HEAD') {
     raw = await git.raw(['diff', ...contextArgs, 'HEAD~1', 'HEAD']).catch(async () => {
+      // No parent (initial commit) -> diff against empty tree
       return git.raw(['diff', ...contextArgs, '4b825dc642cb6eb9a060e54bf8d69288fbee4904', 'HEAD']);
     });
     label = 'HEAD (latest commit)';
@@ -34,6 +46,7 @@ export async function resolveDiff({ cwd, target, compareWith, contextLines }) {
     raw = await git.raw(['diff', ...contextArgs, target, compareWith]);
     label = `${target}..${compareWith}`;
   } else {
+    // single commit-ish vs its parent
     raw = await git.raw(['diff', ...contextArgs, `${target}~1`, target]).catch(async () => {
       return git.raw(['diff', ...contextArgs, '4b825dc642cb6eb9a060e54bf8d69288fbee4904', target]);
     });
@@ -44,6 +57,9 @@ export async function resolveDiff({ cwd, target, compareWith, contextLines }) {
   return { label, raw: raw || '', files };
 }
 
+/**
+ * Minimal unified diff parser -> [{ path, oldPath, status, hunks: [{ header, lines: [{type, oldLine, newLine, content}] }] }]
+ */
 export function parseUnifiedDiff(raw) {
   const files = [];
   if (!raw || !raw.trim()) return files;
@@ -52,7 +68,7 @@ export function parseUnifiedDiff(raw) {
 
   for (const chunk of fileChunks) {
     const lines = chunk.split('\n');
-    const headerLine = lines[0];
+    const headerLine = lines[0]; // 'a/path b/path'
     const match = headerLine.match(/a\/(.+?) b\/(.+)$/);
     let oldPath = match ? match[1] : 'unknown';
     let newPath = match ? match[2] : 'unknown';
@@ -68,6 +84,7 @@ export function parseUnifiedDiff(raw) {
       else if (l.startsWith('rename from')) status = 'renamed';
       else if (l.startsWith('Binary files')) isBinary = true;
       else if (l.startsWith('--- ') || l.startsWith('+++ ')) {
+        // strip a/ b/ prefixes, handle /dev/null
         continue;
       } else if (l.startsWith('@@')) {
         bodyStartIdx = i;
@@ -104,6 +121,8 @@ export function parseUnifiedDiff(raw) {
             currentHunk.lines.push({ type: 'ctx', oldLine, newLine, content: l.slice(1) });
             oldLine++;
             newLine++;
+          } else if (l.startsWith('\\')) {
+            // "\ No newline at end of file" - ignore
           }
         }
       }
