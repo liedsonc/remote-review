@@ -32,10 +32,22 @@ html, body {
   -webkit-font-smoothing: antialiased;
 }
 
-body { min-height: 100dvh; }
-::selection { background: var(--amber-dim); }
-button { font-family: inherit; cursor: pointer; }
+body {
+  min-height: 100dvh;
+}
+
+::selection {
+  background: var(--amber-dim);
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+}
+
 a { color: var(--amber-text); }
+
+/* ---------- layout ---------- */
 
 .header {
   position: sticky;
@@ -105,6 +117,8 @@ a { color: var(--amber-text); }
   margin-bottom: 12px;
 }
 
+/* ---------- file list ---------- */
+
 .file-block {
   border: 1px solid var(--border);
   border-radius: var(--radius);
@@ -124,7 +138,9 @@ a { color: var(--amber-text); }
   border-bottom: 1px solid transparent;
 }
 
-.file-block.open .file-header { border-bottom-color: var(--border); }
+.file-block.open .file-header {
+  border-bottom-color: var(--border);
+}
 
 .file-header .chev {
   font-family: var(--font-mono);
@@ -134,7 +150,9 @@ a { color: var(--amber-text); }
   flex-shrink: 0;
 }
 
-.file-block.open .file-header .chev { transform: rotate(90deg); }
+.file-block.open .file-header .chev {
+  transform: rotate(90deg);
+}
 
 .file-header .path {
   font-family: var(--font-mono);
@@ -171,8 +189,12 @@ a { color: var(--amber-text); }
   flex-shrink: 0;
 }
 
-.file-body { display: none; }
-.file-block.open .file-body { display: block; }
+.file-body {
+  display: none;
+}
+.file-block.open .file-body {
+  display: block;
+}
 
 .binary-note {
   padding: 16px;
@@ -180,6 +202,8 @@ a { color: var(--amber-text); }
   font-size: 13px;
   font-style: italic;
 }
+
+/* ---------- diff table ---------- */
 
 .hunk-header {
   font-family: var(--font-mono);
@@ -197,8 +221,14 @@ table.diff-table {
   line-height: 1.5;
 }
 
-.diff-line { position: relative; }
-.diff-line:hover .add-comment-btn { opacity: 1; }
+.diff-line {
+  position: relative;
+}
+
+.diff-line:hover .add-comment-btn {
+  opacity: 1;
+}
+
 .diff-line.add { background: var(--add-bg); }
 .diff-line.del { background: var(--del-bg); }
 .diff-line.selected { background: var(--amber-dim) !important; }
@@ -253,7 +283,12 @@ table.diff-table {
   background: var(--amber-dim);
 }
 
-.comment-row td { padding: 0; background: var(--bg); }
+/* ---------- comment thread (sticky-note styling: the signature element) ---------- */
+
+.comment-row td {
+  padding: 0;
+  background: var(--bg);
+}
 
 .comment-note {
   margin: 6px 10px 10px 44px;
@@ -354,6 +389,8 @@ table.diff-table {
 }
 .comment-note .saved-actions button:hover { color: var(--amber-text); }
 
+/* ---------- floating submit bar ---------- */
+
 .submit-bar {
   position: fixed;
   bottom: 0;
@@ -391,8 +428,14 @@ table.diff-table {
   gap: 8px;
 }
 .submit-bar .send-btn:hover { background: var(--amber-text); }
-.submit-bar .send-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.submit-bar .send-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
 .submit-bar .send-btn .glyph { color: #1a1305; }
+
+/* ---------- submitted state ---------- */
 
 .submitted-screen {
   display: flex;
@@ -411,13 +454,19 @@ table.diff-table {
   margin-bottom: 16px;
 }
 
-.submitted-screen h1 { font-size: 18px; margin: 0 0 8px; }
+.submitted-screen h1 {
+  font-size: 18px;
+  margin: 0 0 8px;
+}
+
 .submitted-screen p {
   color: var(--text-dim);
   font-size: 14px;
   max-width: 360px;
   margin: 0;
 }
+
+/* ---------- responsive ---------- */
 
 @media (max-width: 640px) {
   .container { padding: 12px 8px 130px; }
