@@ -75,3 +75,13 @@ If nothing was submitted, it prints `Review finished with no comments.` instead.
 | `--context <lines>` | git default | Context lines around each change |
 | `--timeout <seconds>` | none | Give up waiting after N seconds |
 | `--no-open` | opens browser | Don't auto-open the local URL |
+
+## Using it from Claude Code
+
+Copy `skills/remote-review` into your agent's skills directory (or wherever your Claude Code setup loads skills from) so Claude Code knows when and how to reach for it during dispatch sessions:
+
+```bash
+cp -r skills/remote-review ~/.claude/skills/   # adjust to your actual skills path
+```
+
+The skill tells Claude Code to run `remote-review .` after finishing meaningful work in a non-interactive session, share the printed `Remote:` URL with you, and treat the stdout it gets back as review feedback to act on.
