@@ -114,3 +114,8 @@ export function parseUnifiedDiff(raw) {
 
   return files;
 }
+
+export async function getRepoRoot(cwd) {
+  const { stdout } = await execFileAsync('git', ['rev-parse', '--show-toplevel'], { cwd });
+  return stdout.trim();
+}
