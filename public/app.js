@@ -213,3 +213,30 @@ function renderCommentRow(filePath, line, side) {
   tr.appendChild(td);
   return tr;
 }
+
+function renderSubmitBar() {
+  const n = totalComments();
+  const bar = el('div', { class: 'submit-bar' }, [
+    el('span', { class: 'count' }, [
+      n > 0 ? el('strong', {}, String(n)) : '0',
+      ` comment${n === 1 ? '' : 's'}`,
+    ]),
+    el('button', {
+      class: 'send-btn',
+      disabled: state.files.length === 0 ? 'true' : null,
+      onclick: submitReview,
+    }, [
+      el('span', { class: 'glyph' }, '›'),
+      n > 0 ? 'Send to Claude' : 'Finish (no comments)',
+    ]),
+  ]);
+  return bar;
+}
+
+function renderSubmittedScreen() {
+  return el('div', { class: 'submitted-screen' }, [
+    el('div', { class: 'glyph' }, '✓'),
+    el('h1', {}, 'Review sent'),
+    el('p', {}, 'Claude Code has received your comments and this tab can be closed. The tunnel will shut down shortly.'),
+  ]);
+}
