@@ -60,3 +60,26 @@ async function main() {
   });
 
   const httpServer = app.listen(port, opts.host, () => {});
+
+  const localUrl = `http://${opts.host === '0.0.0.0' ? 'localhost' : opts.host}:${port}/?t=${token}`;
+  let tunnelUrl = null;
+  let tunnelProc = null;
+
+  if (opts.tunnel) {
+    const available = await isCloudflaredAvailable();
+    if (!available) {
+      console.error(
+        '[remote-review] cloudflared is not installed or not on PATH — skipping the tunnel.\n' +
+        '  Install it from https://github.com/cloudflare/cloudflared/releases and re-run,\n' +
+        '  or pass --no-tunnel to only bind locally.'
+      );
+    } else {
+      try {
+        const tunnel = await startTunnel(port);
+        tunnelUrl = tunnel.url;
+        tunnelProc = tunnel.proc;
+      } catch (err) {
+        console.error(`[remote-review] Failed to start tunnel: ${err.message}`);
+      }
+    }
+  }
