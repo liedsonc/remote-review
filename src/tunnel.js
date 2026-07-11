@@ -29,6 +29,33 @@ export function startTunnel(port, { timeoutMs = 20000 } = {}) {
       }
     }, timeoutMs);
 
-    return { proc, timer, settled, resolve, reject };
+    const onData = (buf) => {
+      const text = buf.toString();
+      const match = text.match(TRYCLOUDFLARE_RE);
+      if (match && !settled) {
+        settled = true;
+        clearTimeout(timer);
+        resolve({ url: match[0], proc });
+      }
+    };
+
+    proc.stdout.on('data', onData);
+    proc.stderr.on('data', onData);
+
+    proc.on('error', (err) => {
+      if (!settled) {
+        settled = true;
+        clearTimeout(timer);
+        reject(err);
+      }
+    });
+
+    proc.on('exit', (code) => {
+      if (!settled) {
+        settled = true;
+        clearTimeout(timer);
+        reject(new Error(`cloudflared exited early (code ${code}) before producing a tunnel URL.`));
+      }
+    });
   });
 }
