@@ -8,5 +8,13 @@ const PUBLIC_DIR = path.join(__dirname, '..', 'public');
 export function createServer({ diffData, token, onSubmit }) {
   const app = express();
   app.use(express.json({ limit: '2mb' }));
+  function checkToken(req, res, next) {
+    const provided = req.query.t || req.headers['x-review-token'];
+    if (provided !== token) {
+      return res.status(403).json({ error: 'Invalid or missing review token.' });
+    }
+    next();
+  }
+
   return { app };
 }
