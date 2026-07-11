@@ -120,3 +120,45 @@ function renderFileBlock(file) {
   block.appendChild(body);
   return block;
 }
+
+function renderHunkTable(filePath, hunk) {
+  const table = el('table', { class: 'diff-table' });
+  const tbody = el('tbody');
+
+  for (const line of hunk.lines) {
+    const side = line.type === 'del' ? 'old' : 'new';
+    const displayLine = line.type === 'del' ? line.oldLine : line.newLine;
+    const key = commentKey(filePath, displayLine, side);
+    const marker = line.type === 'add' ? '+' : line.type === 'del' ? '−' : ' ';
+
+    const tr = el('tr', { class: `diff-line ${line.type}` }, [
+      el('td', { class: 'ln' }, line.oldLine ? String(line.oldLine) : ''),
+      el('td', { class: 'ln' }, line.newLine ? String(line.newLine) : ''),
+      el('td', { class: 'marker' }, marker),
+      el('td', { class: 'content' }, line.content || ' '),
+      el('td', { class: 'gutter-action' }, [
+        el('button', {
+          class: 'add-comment-btn',
+          title: 'Add comment',
+          onclick: () => startComment(filePath, displayLine, side, table, tr),
+        }, '+'),
+      ]),
+    ]);
+    tbody.appendChild(tr);
+
+    const existing = state.comments.get(key);
+    if (existing) {
+      tbody.appendChild(renderCommentRow(filePath, displayLine, side, table));
+    }
+  }
+
+  table.appendChild(tbody);
+  return table;
+}
+
+function startComment(filePath, line, side, table, afterRow) {
+  const key = commentKey(filePath, line, side);
+  if (state.comments.has(key)) return;
+  state.comments.set(key, { filePath, line, side, body: '', editing: true });
+  render();
+}
