@@ -83,3 +83,13 @@ async function main() {
       }
     }
   }
+
+  const publicUrl = tunnelUrl ? `${tunnelUrl}/?t=${token}` : localUrl;
+
+  console.error(`[remote-review] Reviewing: ${diffData.label}`);
+  console.error(`[remote-review] Files changed: ${diffData.files.length}`);
+  console.error(`[remote-review] Local:  ${localUrl}`);
+  if (tunnelUrl) {
+    console.error(`[remote-review] Remote: ${publicUrl}`);
+  }
+  console.error('[remote-review] Waiting for review to be submitted…');
