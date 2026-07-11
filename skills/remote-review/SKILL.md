@@ -54,3 +54,24 @@ In dispatch mode, you have usually not committed yet, so `<review-command> .` is
    ```
 
 5. If no comments were left, stdout says so explicitly ("Review finished with no comments.") — treat that as approval to proceed.
+
+## After it returns
+
+- If comments were printed, treat each `path:Lline` block as feedback tied to that exact file and line. Address them, then let the user know what you changed (you can offer another `<review-command> .` round if it's a dispatch session with no one watching live).
+- If there were no comments, continue with your plan as normal (e.g. commit, move to the next task).
+- Never poll or re-run the command speculatively — it only returns once the human has acted.
+
+## Options worth knowing
+
+| Flag | Effect |
+| --- | --- |
+| `--no-tunnel` | Skip cloudflared, bind locally only (use if the user is confirmed to be on the same machine/network) |
+| `--timeout <seconds>` | Give up waiting after N seconds instead of blocking forever — use this if the session has a hard time budget |
+| `-C, --cwd <path>` | Run against a different repo path than the current working directory |
+| `--context <lines>` | Widen/narrow surrounding context lines in the diff |
+
+## Constraints
+
+- Only works inside a Git-managed directory.
+- Requires `cloudflared` on PATH for the remote link; falls back to local-only with a warning if it's missing. Do not attempt to install `cloudflared` yourself without asking the user first.
+- One review session at a time — let the current one finish (or time out) before starting another.
