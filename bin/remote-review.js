@@ -46,3 +46,17 @@ async function main() {
     console.log('[remote-review] No changes found for the requested target — nothing to review.');
     return;
   }
+
+  const port = opts.port ? parseInt(opts.port, 10) : await getPort();
+  const token = crypto.randomBytes(16).toString('hex');
+
+  let resolveSubmission;
+  const submissionPromise = new Promise((resolve) => { resolveSubmission = resolve; });
+
+  const { app } = createServer({
+    diffData,
+    token,
+    onSubmit: (comments) => resolveSubmission({ comments, timedOut: false }),
+  });
+
+  const httpServer = app.listen(port, opts.host, () => {});
