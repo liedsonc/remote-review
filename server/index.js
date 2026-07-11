@@ -5,9 +5,19 @@ import { fileURLToPath } from 'node:url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PUBLIC_DIR = path.join(__dirname, '..', 'public');
 
+/**
+ * Creates the review server.
+ *
+ * @param {object} opts
+ * @param {object} opts.diffData - { label, files } to serve at GET /api/diff
+ * @param {string} opts.token - random token required as ?t= query param or X-Review-Token header, to keep the tunnel URL from being enough on its own for someone who merely sees it in a log
+ * @param {(comments: object[]) => void} opts.onSubmit - called once when the user submits a review
+ * @returns {{ app: import('express').Express }}
+ */
 export function createServer({ diffData, token, onSubmit }) {
   const app = express();
   app.use(express.json({ limit: '2mb' }));
+
   function checkToken(req, res, next) {
     const provided = req.query.t || req.headers['x-review-token'];
     if (provided !== token) {
@@ -15,7 +25,6 @@ export function createServer({ diffData, token, onSubmit }) {
     }
     next();
   }
-
 
   app.get('/api/diff', checkToken, (req, res) => {
     res.json(diffData);
@@ -32,6 +41,8 @@ export function createServer({ diffData, token, onSubmit }) {
     onSubmit(comments);
   });
 
+  // Static frontend; index.html gets the token injected client-side via URL fragment/query,
+  // so we don't need to template it server-side.
   app.use(express.static(PUBLIC_DIR));
 
   app.get('*', (req, res) => {
