@@ -76,7 +76,40 @@ export function parseUnifiedDiff(raw) {
     }
 
     const path = status === 'deleted' ? oldPath : newPath;
-    files.push({ path, oldPath, status, isBinary, hunks: [] });
+    const hunks = [];
+
+    if (!isBinary) {
+      let currentHunk = null;
+      let oldLine = 0;
+      let newLine = 0;
+
+      for (let i = bodyStartIdx; i < lines.length; i++) {
+        const l = lines[i];
+        if (l.startsWith('@@')) {
+          const hunkMatch = l.match(/@@ -(\d+)(?:,\d+)? \+(\d+)(?:,\d+)? @@(.*)/);
+          if (hunkMatch) {
+            oldLine = parseInt(hunkMatch[1], 10);
+            newLine = parseInt(hunkMatch[2], 10);
+            currentHunk = { header: l, context: hunkMatch[3]?.trim() || '', lines: [] };
+            hunks.push(currentHunk);
+          }
+        } else if (currentHunk) {
+          if (l.startsWith('+')) {
+            currentHunk.lines.push({ type: 'add', oldLine: null, newLine, content: l.slice(1) });
+            newLine++;
+          } else if (l.startsWith('-')) {
+            currentHunk.lines.push({ type: 'del', oldLine, newLine: null, content: l.slice(1) });
+            oldLine++;
+          } else if (l.startsWith(' ') || l === '') {
+            currentHunk.lines.push({ type: 'ctx', oldLine, newLine, content: l.slice(1) });
+            oldLine++;
+            newLine++;
+          }
+        }
+      }
+    }
+
+    files.push({ path, oldPath, status, isBinary, hunks });
   }
 
   return files;
