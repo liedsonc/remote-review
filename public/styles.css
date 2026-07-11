@@ -1,0 +1,38 @@
+:root {
+  --bg: #14161a;
+  --bg-raised: #1b1e24;
+  --bg-hunk-header: #20242c;
+  --border: #2a2e37;
+  --border-soft: #22252c;
+  --text: #e8e6e1;
+  --text-dim: #8b909c;
+  --text-faint: #5b6070;
+  --add-bg: rgba(63, 185, 80, 0.13);
+  --add-bg-strong: rgba(63, 185, 80, 0.22);
+  --add-text: #6fd97f;
+  --del-bg: rgba(217, 105, 95, 0.13);
+  --del-bg-strong: rgba(217, 105, 95, 0.22);
+  --del-text: #e08a81;
+  --amber: #e8a33d;
+  --amber-dim: rgba(232, 163, 61, 0.16);
+  --amber-text: #f4c477;
+  --font-ui: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  --radius: 6px;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-ui);
+  -webkit-font-smoothing: antialiased;
+}
+
+body { min-height: 100dvh; }
+::selection { background: var(--amber-dim); }
+button { font-family: inherit; cursor: pointer; }
+a { color: var(--amber-text); }
