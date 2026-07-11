@@ -85,3 +85,17 @@ cp -r skills/remote-review ~/.claude/skills/   # adjust to your actual skills pa
 ```
 
 The skill tells Claude Code to run `remote-review .` after finishing meaningful work in a non-interactive session, share the printed `Remote:` URL with you, and treat the stdout it gets back as review feedback to act on.
+
+## How it's different from difit
+
+- **Tunneled by default** — a fresh `cloudflared` quick tunnel per invocation, torn down when the review is submitted, so the link works from any device without VPN/SSH setup.
+- **Token-gated** — the tunnel URL alone isn't enough; a random token is required, so a leaked/logged URL without the token query param doesn't expose the diff.
+- **Built for the blocking-CLI-call contract** specifically, so it drops straight into an agent's tool-call loop the same way difit does, just reachable remotely.
+- Everything else (diff parsing, comment UX, prompt format) intentionally mirrors difit's proven model.
+
+## Security notes
+
+- Each session generates a random token; without it, `/api/diff` and `/api/submit` return `403`.
+- The tunnel is anonymous and unauthenticated beyond that token — treat the link as a bearer credential, don't paste it somewhere public.
+- The server only accepts **one** submission per invocation, then the process exits and the tunnel is torn down.
+- `remote-review` never writes to your repo or executes anything on your behalf; it only reads diffs and returns text.
