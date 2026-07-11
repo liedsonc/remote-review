@@ -59,3 +59,9 @@ export function startTunnel(port, { timeoutMs = 20000 } = {}) {
     });
   });
 }
+
+export function stopTunnel(proc) {
+  if (proc && !proc.killed) {
+    proc.kill('SIGTERM');
+  }
+}
