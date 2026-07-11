@@ -1,7 +1,17 @@
 {
   "name": "remote-review",
   "version": "0.1.0",
-  "description": "Review Claude Code's git diffs from anywhere via a shareable tunnel link, and send comments straight back to the agent — no PR required.",
+  "description": "Review Claude Code's git diffs from anywhere via a shareable tunnel link, and send comments straight back to the agent \u2014 no PR required.",
   "type": "module",
-  "license": "MIT"
+  "license": "MIT",
+  "bin": {
+    "remote-review": "./bin/remote-review.js"
+  },
+  "files": [
+    "bin",
+    "src",
+    "server",
+    "public",
+    "skills"
+  ]
 }
