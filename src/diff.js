@@ -43,3 +43,11 @@ export async function resolveDiff({ cwd, target, compareWith, contextLines }) {
   const files = parseUnifiedDiff(raw || '');
   return { label, raw: raw || '', files };
 }
+
+export function parseUnifiedDiff(raw) {
+  const files = [];
+  if (!raw || !raw.trim()) return files;
+
+  const fileChunks = raw.split(/^diff --git /m).slice(1);
+  return files;
+}
