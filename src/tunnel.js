@@ -3,6 +3,7 @@ import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 
 const execFileAsync = promisify(execFile);
+
 const TRYCLOUDFLARE_RE = /https:\/\/[a-zA-Z0-9-]+\.trycloudflare\.com/;
 
 export async function isCloudflaredAvailable() {
@@ -14,6 +15,11 @@ export async function isCloudflaredAvailable() {
   }
 }
 
+/**
+ * Starts a cloudflared quick tunnel pointing at http://localhost:<port>.
+ * Resolves with { url, proc } once the public URL has been parsed from stderr/stdout.
+ * Rejects if cloudflared isn't installed or fails to produce a URL within the timeout.
+ */
 export function startTunnel(port, { timeoutMs = 20000 } = {}) {
   return new Promise((resolve, reject) => {
     const proc = spawn('cloudflared', ['tunnel', '--url', `http://localhost:${port}`, '--no-autoupdate'], {
