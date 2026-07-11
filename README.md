@@ -63,3 +63,15 @@ This should probably validate input before writing to disk
 ```
 
 If nothing was submitted, it prints `Review finished with no comments.` instead.
+
+### Options
+
+| Flag | Default | Description |
+| --- | --- | --- |
+| `-p, --port <port>` | random free port | Local port to bind |
+| `--no-tunnel` | tunnel on | Skip cloudflared, local-only |
+| `--host <host>` | `127.0.0.1` | Host to bind the local server to |
+| `-C, --cwd <path>` | cwd | Run against a different repo path |
+| `--context <lines>` | git default | Context lines around each change |
+| `--timeout <seconds>` | none | Give up waiting after N seconds |
+| `--no-open` | opens browser | Don't auto-open the local URL |
