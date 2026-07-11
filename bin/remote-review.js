@@ -107,6 +107,7 @@ async function main() {
     httpServer.close();
   };
 
+  // Allow Ctrl+C to exit gracefully and still print whatever was gathered (nothing, in that case).
   process.on('SIGINT', () => {
     console.error('\n[remote-review] Interrupted — no review submitted.');
     cleanup();
@@ -126,6 +127,7 @@ async function main() {
     return;
   }
 
+  // difit-compatible prompt format: one block per comment.
   console.log(formatCommentsAsPrompt(comments));
 }
 
