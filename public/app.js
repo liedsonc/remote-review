@@ -240,3 +240,38 @@ function renderSubmittedScreen() {
     el('p', {}, 'Claude Code has received your comments and this tab can be closed. The tunnel will shut down shortly.'),
   ]);
 }
+
+async function submitReview() {
+  const comments = [...state.comments.values()]
+    .filter((c) => !c.editing && c.body)
+    .map((c) => ({ filePath: c.filePath, line: c.line, side: c.side, body: c.body }));
+
+  try {
+    await apiFetch('/api/submit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ comments }),
+    });
+    state.submitted = true;
+    render();
+  } catch (err) {
+    alert(`Failed to submit: ${err.message}`);
+  }
+}
+
+async function init() {
+  try {
+    const data = await apiFetch('/api/diff');
+    state.label = data.label;
+    state.files = data.files;
+    render();
+  } catch (err) {
+    app.innerHTML = '';
+    app.appendChild(el('div', { class: 'empty-state' }, [
+      el('div', { class: 'glyph' }, '⚠'),
+      el('div', {}, `Failed to load diff: ${err.message}`),
+    ]));
+  }
+}
+
+init();
