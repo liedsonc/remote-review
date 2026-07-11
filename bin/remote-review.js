@@ -93,3 +93,22 @@ async function main() {
     console.error(`[remote-review] Remote: ${publicUrl}`);
   }
   console.error('[remote-review] Waiting for review to be submitted…');
+
+  let timeoutHandle = null;
+  if (opts.timeout) {
+    timeoutHandle = setTimeout(() => {
+      resolveSubmission({ comments: [], timedOut: true });
+    }, opts.timeout * 1000);
+  }
+
+  const cleanup = () => {
+    if (timeoutHandle) clearTimeout(timeoutHandle);
+    if (tunnelProc) stopTunnel(tunnelProc);
+    httpServer.close();
+  };
+
+  process.on('SIGINT', () => {
+    console.error('\n[remote-review] Interrupted — no review submitted.');
+    cleanup();
+    process.exit(130);
+  });
