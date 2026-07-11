@@ -180,3 +180,75 @@ a { color: var(--amber-text); }
   font-size: 13px;
   font-style: italic;
 }
+
+.hunk-header {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  color: var(--text-faint);
+  background: var(--bg-hunk-header);
+  padding: 4px 14px;
+}
+
+table.diff-table {
+  border-collapse: collapse;
+  width: 100%;
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+
+.diff-line { position: relative; }
+.diff-line:hover .add-comment-btn { opacity: 1; }
+.diff-line.add { background: var(--add-bg); }
+.diff-line.del { background: var(--del-bg); }
+.diff-line.selected { background: var(--amber-dim) !important; }
+
+.diff-line .ln {
+  width: 42px;
+  min-width: 42px;
+  text-align: right;
+  padding: 0 8px;
+  color: var(--text-faint);
+  user-select: none;
+  vertical-align: top;
+  border-right: 1px solid var(--border-soft);
+}
+
+.diff-line .marker {
+  width: 18px;
+  text-align: center;
+  user-select: none;
+  vertical-align: top;
+  padding-top: 0;
+}
+.diff-line.add .marker { color: var(--add-text); }
+.diff-line.del .marker { color: var(--del-text); }
+
+.diff-line .content {
+  white-space: pre-wrap;
+  word-break: break-word;
+  padding: 0 8px 0 4px;
+  vertical-align: top;
+}
+
+.diff-line .gutter-action {
+  width: 28px;
+  vertical-align: top;
+  text-align: center;
+}
+
+.add-comment-btn {
+  opacity: 0;
+  transition: opacity 0.12s ease;
+  background: none;
+  border: none;
+  color: var(--text-faint);
+  font-size: 14px;
+  line-height: 1;
+  padding: 1px 4px;
+  border-radius: 4px;
+}
+.add-comment-btn:hover {
+  color: var(--amber);
+  background: var(--amber-dim);
+}
