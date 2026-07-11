@@ -21,6 +21,15 @@ export async function resolveDiff({ cwd, target, compareWith, contextLines }) {
       return git.raw(['diff', ...contextArgs, '4b825dc642cb6eb9a060e54bf8d69288fbee4904', 'HEAD']);
     });
     label = 'HEAD (latest commit)';
+  } else if (target === '.') {
+    raw = await git.raw(['diff', ...contextArgs, 'HEAD']);
+    label = 'All uncommitted changes';
+  } else if (target === 'staged' || target === 'staging') {
+    raw = await git.raw(['diff', ...contextArgs, '--cached']);
+    label = 'Staged changes';
+  } else if (target === 'working') {
+    raw = await git.raw(['diff', ...contextArgs]);
+    label = 'Unstaged changes';
   }
 
   const files = parseUnifiedDiff(raw || '');
