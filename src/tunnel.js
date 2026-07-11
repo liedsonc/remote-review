@@ -13,3 +13,22 @@ export async function isCloudflaredAvailable() {
     return false;
   }
 }
+
+export function startTunnel(port, { timeoutMs = 20000 } = {}) {
+  return new Promise((resolve, reject) => {
+    const proc = spawn('cloudflared', ['tunnel', '--url', `http://localhost:${port}`, '--no-autoupdate'], {
+      stdio: ['ignore', 'pipe', 'pipe'],
+    });
+
+    let settled = false;
+    const timer = setTimeout(() => {
+      if (!settled) {
+        settled = true;
+        proc.kill();
+        reject(new Error('Timed out waiting for cloudflared to produce a tunnel URL.'));
+      }
+    }, timeoutMs);
+
+    return { proc, timer, settled, resolve, reject };
+  });
+}
