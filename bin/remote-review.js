@@ -112,3 +112,34 @@ async function main() {
     cleanup();
     process.exit(130);
   });
+
+  const { comments, timedOut } = await submissionPromise;
+  cleanup();
+
+  if (timedOut) {
+    console.error('[remote-review] Timed out waiting for a review.');
+    return;
+  }
+
+  if (comments.length === 0) {
+    console.log('[remote-review] Review finished with no comments.');
+    return;
+  }
+
+  console.log(formatCommentsAsPrompt(comments));
+}
+
+function formatCommentsAsPrompt(comments) {
+  const lines = [];
+  for (const c of comments) {
+    lines.push(`${c.filePath}:L${c.line}`);
+    lines.push(c.body.trim());
+    lines.push('');
+  }
+  return lines.join('\n').trimEnd();
+}
+
+main().catch((err) => {
+  console.error(`[remote-review] Unexpected error: ${err.stack || err.message}`);
+  process.exitCode = 1;
+});
