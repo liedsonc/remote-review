@@ -24,3 +24,19 @@ Inspired by [difit](https://github.com/yoshiko-pg/difit), which solves this beau
                      Claude Code reads them as its tool result
                      and addresses the feedback
 ```
+
+## Install
+
+```bash
+npm install -g remote-review
+```
+
+You'll also want [`cloudflared`](https://github.com/cloudflare/cloudflared/releases) on your `PATH` for remote links (no account or config needed — it uses anonymous "quick tunnels"). Without it, `remote-review` still works, just local-only.
+
+```bash
+# macOS
+brew install cloudflared
+
+# Linux: grab the binary from the releases page above, or
+# your distro's package manager if it has one
+```
