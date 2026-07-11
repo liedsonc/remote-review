@@ -49,5 +49,35 @@ export function parseUnifiedDiff(raw) {
   if (!raw || !raw.trim()) return files;
 
   const fileChunks = raw.split(/^diff --git /m).slice(1);
+
+  for (const chunk of fileChunks) {
+    const lines = chunk.split('\n');
+    const headerLine = lines[0];
+    const match = headerLine.match(/a\/(.+?) b\/(.+)$/);
+    let oldPath = match ? match[1] : 'unknown';
+    let newPath = match ? match[2] : 'unknown';
+
+    let status = 'modified';
+    let isBinary = false;
+    let bodyStartIdx = 1;
+
+    for (let i = 1; i < lines.length; i++) {
+      const l = lines[i];
+      if (l.startsWith('new file mode')) status = 'added';
+      else if (l.startsWith('deleted file mode')) status = 'deleted';
+      else if (l.startsWith('rename from')) status = 'renamed';
+      else if (l.startsWith('Binary files')) isBinary = true;
+      else if (l.startsWith('--- ') || l.startsWith('+++ ')) {
+        continue;
+      } else if (l.startsWith('@@')) {
+        bodyStartIdx = i;
+        break;
+      }
+    }
+
+    const path = status === 'deleted' ? oldPath : newPath;
+    files.push({ path, oldPath, status, isBinary, hunks: [] });
+  }
+
   return files;
 }
