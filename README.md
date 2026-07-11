@@ -40,3 +40,26 @@ brew install cloudflared
 # Linux: grab the binary from the releases page above, or
 # your distro's package manager if it has one
 ```
+
+## Usage
+
+```bash
+remote-review .        # all uncommitted changes (most common in dispatch mode)
+remote-review          # HEAD's latest commit
+remote-review staged   # staged changes only
+remote-review working  # unstaged changes only
+remote-review main     # a specific ref vs its parent
+remote-review feature main   # compare two refs
+```
+
+The command **blocks** until you submit a review (or close the tab having decided there's nothing to say). On exit, any comments are printed to stdout in a simple format:
+
+```
+src/components/Button.tsx:L42
+Make this variable name more descriptive
+
+src/api/handler.ts:L18
+This should probably validate input before writing to disk
+```
+
+If nothing was submitted, it prints `Review finished with no comments.` instead.
