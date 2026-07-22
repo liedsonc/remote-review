@@ -11,13 +11,24 @@
     "src",
     "server",
     "public",
-    "skills"
+    "skills",
+    "LICENSE"
   ],
   "engines": {
     "node": ">=18.0.0"
   },
   "scripts": {
-    "start": "node bin/remote-review.js"
+    "start": "node bin/remote-review.js",
+    "test": "node --test test/**/*.test.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/liedsonc/remote-review.git"
+  },
+  "author": "liedsonc <liedsonc@icloud.com>",
+  "homepage": "https://github.com/liedsonc/remote-review#readme",
+  "bugs": {
+    "url": "https://github.com/liedsonc/remote-review/issues"
   },
   "dependencies": {
     "commander": "^12.1.0",

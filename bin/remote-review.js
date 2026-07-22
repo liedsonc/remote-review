@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import { Command } from 'commander';
 import getPort from 'get-port';
+import open from 'open';
 import crypto from 'node:crypto';
 import process from 'node:process';
 
@@ -93,6 +94,10 @@ async function main() {
     console.error(`[remote-review] Remote: ${publicUrl}`);
   }
   console.error('[remote-review] Waiting for review to be submitted…');
+
+  if (opts.open) {
+    open(localUrl).catch(() => {});
+  }
 
   let timeoutHandle = null;
   if (opts.timeout) {

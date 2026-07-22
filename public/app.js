@@ -27,11 +27,12 @@ async function apiFetch(path, opts = {}) {
 
 function el(tag, attrs = {}, children = []) {
   const node = document.createElement(tag);
-  for (const [k, v] of Object.entries(attrs)) {
-    if (k === 'class') node.className = v;
-    else if (k === 'html') node.innerHTML = v;
-    else if (k.startsWith('on') && typeof v === 'function') node.addEventListener(k.slice(2), v);
-    else node.setAttribute(k, v);
+  for (const [attrName, attrValue] of Object.entries(attrs)) {
+    if (attrValue == null) continue;
+    if (attrName === 'class') node.className = attrValue;
+    else if (attrName === 'html') node.innerHTML = attrValue;
+    else if (attrName.startsWith('on') && typeof attrValue === 'function') node.addEventListener(attrName.slice(2), attrValue);
+    else node.setAttribute(attrName, attrValue);
   }
   for (const child of [].concat(children)) {
     if (child == null) continue;
@@ -219,6 +220,67 @@ function renderCommentRow(filePath, line, side) {
   return tr;
 }
 
+function findLineContent(filePath, line, side) {
+  const file = state.files.find((f) => f.path === filePath);
+  if (!file) return null;
+  for (const hunk of file.hunks) {
+    for (const hunkLine of hunk.lines) {
+      const lineSide = hunkLine.type === 'del' ? 'old' : 'new';
+      const lineNumber = hunkLine.type === 'del' ? hunkLine.oldLine : hunkLine.newLine;
+      if (lineSide === side && lineNumber === line) return hunkLine.content;
+    }
+  }
+  return null;
+}
+
+function formatCommentsForClipboard() {
+  const lines = [
+    `Code review comments from remote-review (${state.label}). Address each comment:`,
+    '',
+  ];
+  for (const comment of state.comments.values()) {
+    if (comment.editing || !comment.body) continue;
+    lines.push(`${comment.filePath}:${comment.line} (${comment.side})`);
+    const lineContent = findLineContent(comment.filePath, comment.line, comment.side);
+    if (lineContent != null) lines.push(`> ${lineContent}`);
+    lines.push(comment.body.trim());
+    lines.push('');
+  }
+  return lines.join('\n').trimEnd();
+}
+
+async function copyToClipboard(text) {
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    try {
+      await navigator.clipboard.writeText(text);
+      return true;
+    } catch {}
+  }
+  const textarea = document.createElement('textarea');
+  textarea.value = text;
+  textarea.style.position = 'fixed';
+  textarea.style.opacity = '0';
+  document.body.appendChild(textarea);
+  textarea.select();
+  let copied = false;
+  try {
+    copied = document.execCommand('copy');
+  } catch {}
+  textarea.remove();
+  return copied;
+}
+
+async function copyComments(copyButton) {
+  const copied = await copyToClipboard(formatCommentsForClipboard());
+  const originalLabel = copyButton.textContent;
+  copyButton.textContent = copied ? 'Copied ✓' : 'Copy failed';
+  copyButton.disabled = true;
+  setTimeout(() => {
+    copyButton.textContent = originalLabel;
+    copyButton.disabled = false;
+  }, 1500);
+}
+
 function renderSubmitBar() {
   const n = totalComments();
   const bar = el('div', { class: 'submit-bar' }, [
@@ -226,6 +288,13 @@ function renderSubmitBar() {
       n > 0 ? el('strong', {}, String(n)) : '0',
       ` comment${n === 1 ? '' : 's'}`,
     ]),
+    n > 0
+      ? el('button', {
+          class: 'copy-btn',
+          title: 'Copy comments to paste into Claude Code manually',
+          onclick: (event) => copyComments(event.currentTarget),
+        }, 'Copy')
+      : null,
     el('button', {
       class: 'send-btn',
       disabled: state.files.length === 0 ? 'true' : null,
@@ -260,7 +329,7 @@ async function submitReview() {
     state.submitted = true;
     render();
   } catch (err) {
-    alert(`Failed to submit: ${err.message}`);
+    alert(`Failed to submit: ${err.message} — use the Copy button and paste the comments into Claude Code manually.`);
   }
 }
 

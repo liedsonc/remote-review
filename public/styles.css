@@ -414,6 +414,21 @@ table.diff-table {
 }
 .submit-bar .count strong { color: var(--amber-text); }
 
+.submit-bar .copy-btn {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  font-family: var(--font-mono);
+  font-size: 14px;
+  padding: 10px 16px;
+  border-radius: var(--radius);
+}
+.submit-bar .copy-btn:hover { border-color: var(--text-faint); color: var(--text); }
+.submit-bar .copy-btn:disabled {
+  opacity: 0.7;
+  cursor: default;
+}
+
 .submit-bar .send-btn {
   background: var(--amber);
   border: none;
