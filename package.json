@@ -19,7 +19,7 @@
   },
   "scripts": {
     "start": "node bin/remote-review.js",
-    "test": "node --test test/**/*.test.js"
+    "test": "node --test test/*.test.js"
   },
   "repository": {
     "type": "git",
