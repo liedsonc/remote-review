@@ -23,12 +23,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/liedsonc/remote-review.git"
+    "url": "git+https://github.com/akira-io/remote-review.git"
   },
   "author": "liedsonc <liedsonc@icloud.com>",
-  "homepage": "https://github.com/liedsonc/remote-review#readme",
+  "homepage": "https://github.com/akira-io/remote-review#readme",
   "bugs": {
-    "url": "https://github.com/liedsonc/remote-review/issues"
+    "url": "https://github.com/akira-io/remote-review/issues"
   },
   "dependencies": {
     "commander": "^12.1.0",
