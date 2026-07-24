@@ -4,17 +4,64 @@ import { promisify } from 'node:util';
 
 const execFileAsync = promisify(execFile);
 
-/**
- * Resolve a diff for the given target/compareWith arguments, similar to difit's model.
- *
- * Supported targets:
- *   (none)          -> HEAD vs its parent (latest commit)
- *   "."             -> all uncommitted changes (staged + unstaged)
- *   "staged"        -> staged changes only
- *   "working"       -> unstaged changes only
- *   <commit-ish>    -> that commit vs its parent
- *   <a> <b>         -> diff between two refs
- */
+const EMPTY_TREE = '4b825dc642cb6eb9a060e54bf8d69288fbee4904';
+const FULL_SHA = /^[0-9a-f]{40}$/;
+const WORKING_TREE_TARGETS = new Set(['.', 'staged', 'staging', 'working']);
+const HUNK_HEADER = /@@ -(\d+)(?:,\d+)? \+(\d+)(?:,\d+)? @@(.*)/;
+
+const FILE_STATUS_PREFIXES = [
+  ['new file mode', 'added'],
+  ['deleted file mode', 'deleted'],
+  ['rename from', 'renamed'],
+];
+
+async function assertRevision(git, ref) {
+  const resolved = await git
+    .raw(['rev-parse', '--verify', '--quiet', '--end-of-options', ref])
+    .catch(() => '');
+
+  if (!FULL_SHA.test(resolved.trim())) {
+    throw new Error(`${ref} is not a valid git revision.`);
+  }
+}
+
+function diffArgs(contextArgs, ...revisions) {
+  return ['diff', ...contextArgs, '--end-of-options', ...revisions];
+}
+
+function diffAgainstParent(git, contextArgs, revision) {
+  return git
+    .raw(diffArgs(contextArgs, `${revision}~1`, revision))
+    .catch(() => git.raw(diffArgs(contextArgs, EMPTY_TREE, revision)));
+}
+
+async function resolveRaw(git, { target, compareWith, contextArgs }) {
+  if (!target || target === 'HEAD') {
+    return { raw: await diffAgainstParent(git, contextArgs, 'HEAD'), label: 'HEAD (latest commit)' };
+  }
+
+  if (target === '.') {
+    return { raw: await git.raw(diffArgs(contextArgs, 'HEAD')), label: 'All uncommitted changes' };
+  }
+
+  if (target === 'staged' || target === 'staging') {
+    return { raw: await git.raw(['diff', ...contextArgs, '--cached']), label: 'Staged changes' };
+  }
+
+  if (target === 'working') {
+    return { raw: await git.raw(['diff', ...contextArgs]), label: 'Unstaged changes' };
+  }
+
+  if (compareWith) {
+    return {
+      raw: await git.raw(diffArgs(contextArgs, target, compareWith)),
+      label: `${target}..${compareWith}`,
+    };
+  }
+
+  return { raw: await diffAgainstParent(git, contextArgs, target), label: target };
+}
+
 export async function resolveDiff({ cwd, target, compareWith, contextLines }) {
   const git = simpleGit({ baseDir: cwd });
 
@@ -23,112 +70,146 @@ export async function resolveDiff({ cwd, target, compareWith, contextLines }) {
     throw new Error(`Not a git repository: ${cwd}`);
   }
 
-  const contextArgs = contextLines != null ? [`--unified=${contextLines}`] : [];
-  let raw;
-  let label;
-
-  if (!target || target === 'HEAD') {
-    raw = await git.raw(['diff', ...contextArgs, 'HEAD~1', 'HEAD']).catch(async () => {
-      // No parent (initial commit) -> diff against empty tree
-      return git.raw(['diff', ...contextArgs, '4b825dc642cb6eb9a060e54bf8d69288fbee4904', 'HEAD']);
-    });
-    label = 'HEAD (latest commit)';
-  } else if (target === '.') {
-    raw = await git.raw(['diff', ...contextArgs, 'HEAD']);
-    label = 'All uncommitted changes';
-  } else if (target === 'staged' || target === 'staging') {
-    raw = await git.raw(['diff', ...contextArgs, '--cached']);
-    label = 'Staged changes';
-  } else if (target === 'working') {
-    raw = await git.raw(['diff', ...contextArgs]);
-    label = 'Unstaged changes';
-  } else if (compareWith) {
-    raw = await git.raw(['diff', ...contextArgs, target, compareWith]);
-    label = `${target}..${compareWith}`;
-  } else {
-    // single commit-ish vs its parent
-    raw = await git.raw(['diff', ...contextArgs, `${target}~1`, target]).catch(async () => {
-      return git.raw(['diff', ...contextArgs, '4b825dc642cb6eb9a060e54bf8d69288fbee4904', target]);
-    });
-    label = `${target}`;
+  if (target && !WORKING_TREE_TARGETS.has(target)) {
+    await assertRevision(git, target);
   }
 
-  const files = parseUnifiedDiff(raw || '');
-  return { label, raw: raw || '', files };
+  if (compareWith) {
+    await assertRevision(git, compareWith);
+  }
+
+  const contextArgs = contextLines != null ? [`--unified=${contextLines}`] : [];
+  const { raw, label } = await resolveRaw(git, { target, compareWith, contextArgs });
+
+  return { label, raw: raw || '', files: parseUnifiedDiff(raw || '') };
 }
 
-/**
- * Minimal unified diff parser -> [{ path, oldPath, status, hunks: [{ header, lines: [{type, oldLine, newLine, content}] }] }]
- */
+function fileStatusFor(line) {
+  for (const [prefix, status] of FILE_STATUS_PREFIXES) {
+    if (line.startsWith(prefix)) {
+      return status;
+    }
+  }
+
+  return null;
+}
+
+function hunkLineType(line) {
+  if (line.startsWith('+')) {
+    return 'add';
+  }
+
+  if (line.startsWith('-')) {
+    return 'del';
+  }
+
+  if (line.startsWith(' ') || line === '') {
+    return 'ctx';
+  }
+
+  return null;
+}
+
+function parseFileHeader(lines) {
+  const match = lines[0].match(/a\/(.+?) b\/(.+)$/);
+  const header = {
+    oldPath: match ? match[1] : 'unknown',
+    newPath: match ? match[2] : 'unknown',
+    status: 'modified',
+    isBinary: false,
+    bodyStartIdx: 1,
+  };
+
+  for (let i = 1; i < lines.length; i++) {
+    const line = lines[i];
+
+    if (line.startsWith('@@')) {
+      header.bodyStartIdx = i;
+      break;
+    }
+
+    if (line.startsWith('Binary files')) {
+      header.isBinary = true;
+      continue;
+    }
+
+    const status = fileStatusFor(line);
+    if (status) {
+      header.status = status;
+    }
+  }
+
+  return header;
+}
+
+function parseHunks(lines, bodyStartIdx) {
+  const hunks = [];
+  let currentHunk = null;
+  let oldLine = 0;
+  let newLine = 0;
+
+  for (let i = bodyStartIdx; i < lines.length; i++) {
+    const line = lines[i];
+
+    if (line.startsWith('@@')) {
+      const match = line.match(HUNK_HEADER);
+      if (!match) {
+        continue;
+      }
+
+      oldLine = parseInt(match[1], 10);
+      newLine = parseInt(match[2], 10);
+      currentHunk = { header: line, context: match[3]?.trim() || '', lines: [] };
+      hunks.push(currentHunk);
+      continue;
+    }
+
+    if (!currentHunk) {
+      continue;
+    }
+
+    const type = hunkLineType(line);
+    const content = line.slice(1);
+
+    if (type === 'add') {
+      currentHunk.lines.push({ type, oldLine: null, newLine, content });
+      newLine++;
+      continue;
+    }
+
+    if (type === 'del') {
+      currentHunk.lines.push({ type, oldLine, newLine: null, content });
+      oldLine++;
+      continue;
+    }
+
+    if (type === 'ctx') {
+      currentHunk.lines.push({ type, oldLine, newLine, content });
+      oldLine++;
+      newLine++;
+    }
+  }
+
+  return hunks;
+}
+
 export function parseUnifiedDiff(raw) {
   const files = [];
-  if (!raw || !raw.trim()) return files;
+  if (!raw || !raw.trim()) {
+    return files;
+  }
 
-  const fileChunks = raw.split(/^diff --git /m).slice(1);
-
-  for (const chunk of fileChunks) {
+  for (const chunk of raw.split(/^diff --git /m).slice(1)) {
     const lines = chunk.split('\n');
-    const headerLine = lines[0]; // 'a/path b/path'
-    const match = headerLine.match(/a\/(.+?) b\/(.+)$/);
-    let oldPath = match ? match[1] : 'unknown';
-    let newPath = match ? match[2] : 'unknown';
+    const { oldPath, newPath, status, isBinary, bodyStartIdx } = parseFileHeader(lines);
 
-    let status = 'modified';
-    let isBinary = false;
-    let bodyStartIdx = 1;
-
-    for (let i = 1; i < lines.length; i++) {
-      const l = lines[i];
-      if (l.startsWith('new file mode')) status = 'added';
-      else if (l.startsWith('deleted file mode')) status = 'deleted';
-      else if (l.startsWith('rename from')) status = 'renamed';
-      else if (l.startsWith('Binary files')) isBinary = true;
-      else if (l.startsWith('--- ') || l.startsWith('+++ ')) {
-        // strip a/ b/ prefixes, handle /dev/null
-        continue;
-      } else if (l.startsWith('@@')) {
-        bodyStartIdx = i;
-        break;
-      }
-    }
-
-    const path = status === 'deleted' ? oldPath : newPath;
-    const hunks = [];
-
-    if (!isBinary) {
-      let currentHunk = null;
-      let oldLine = 0;
-      let newLine = 0;
-
-      for (let i = bodyStartIdx; i < lines.length; i++) {
-        const l = lines[i];
-        if (l.startsWith('@@')) {
-          const hunkMatch = l.match(/@@ -(\d+)(?:,\d+)? \+(\d+)(?:,\d+)? @@(.*)/);
-          if (hunkMatch) {
-            oldLine = parseInt(hunkMatch[1], 10);
-            newLine = parseInt(hunkMatch[2], 10);
-            currentHunk = { header: l, context: hunkMatch[3]?.trim() || '', lines: [] };
-            hunks.push(currentHunk);
-          }
-        } else if (currentHunk) {
-          if (l.startsWith('+')) {
-            currentHunk.lines.push({ type: 'add', oldLine: null, newLine, content: l.slice(1) });
-            newLine++;
-          } else if (l.startsWith('-')) {
-            currentHunk.lines.push({ type: 'del', oldLine, newLine: null, content: l.slice(1) });
-            oldLine++;
-          } else if (l.startsWith(' ') || l === '') {
-            currentHunk.lines.push({ type: 'ctx', oldLine, newLine, content: l.slice(1) });
-            oldLine++;
-            newLine++;
-          } else if (l.startsWith('\\')) {
-            // "\ No newline at end of file" - ignore
-          }
-        }
-      }
-    }
-
-    files.push({ path, oldPath, status, isBinary, hunks });
+    files.push({
+      path: status === 'deleted' ? oldPath : newPath,
+      oldPath,
+      status,
+      isBinary,
+      hunks: isBinary ? [] : parseHunks(lines, bodyStartIdx),
+    });
   }
 
   return files;
